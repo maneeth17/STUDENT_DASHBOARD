@@ -9,7 +9,6 @@ function Login({ onLogin }) {
   });
 
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   // Auto login if token already exists
   useEffect(() => {
