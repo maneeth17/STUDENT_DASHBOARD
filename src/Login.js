@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 
 function Login({ onLogin }) {
@@ -9,66 +9,55 @@ function Login({ onLogin }) {
   });
 
   const [error, setError] = useState("");
-
-  // Auto login if token already exists
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      onLogin(true);
-    }
-  }, [onLogin]);
+  const [loading, setLoading] = useState(false);   // 🔥 FIXED
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-const loginUser = () => {
-  axios.post("http://localhost:8080/auth/login", form)
-    .then(res => {
+  const loginUser = () => {
+    setLoading(true);
 
-      // JWT token comes as string
-      const token = res.data;
+    axios.post("http://localhost:8080/auth/login", form)
+      .then(res => {
+        setLoading(false);
 
-      if(token && token.startsWith("ey")){
+        if(res.data){
+          localStorage.setItem("token", res.data);
+          onLogin(res.data);
+        } else {
+          setError("Invalid credentials");
+        }
+      })
+      .catch(() => {
+        setLoading(false);
+        setError("Server error");
+      });
+  };
 
-        // store token
-        localStorage.setItem("token", token);
-
-        // set axios header globally
-        axios.defaults.headers.common["Authorization"] = "Bearer " + token;
-
-        onLogin(token);
-      } 
-      else {
-        setError("Invalid credentials");
-      }
-
-    })
-    .catch(() => setError("Server error"));
-};
   return (
     <div style={{
-      height: "100vh",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      background: "#f4f6f8"
+      height:"100vh",
+      display:"flex",
+      justifyContent:"center",
+      alignItems:"center",
+      background:"#f4f6f8"
     }}>
       <div style={{
-        padding: "30px",
-        background: "white",
-        borderRadius: "10px",
-        boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
-        width: "320px"
+        padding:"30px",
+        background:"white",
+        borderRadius:"10px",
+        boxShadow:"0px 4px 12px rgba(0,0,0,0.1)",
+        width:"320px"
       }}>
-        <h2 style={{ textAlign: "center" }}>College ERP Login</h2>
+        <h2>Login</h2>
 
         <input
           name="username"
           placeholder="Username"
           value={form.username}
           onChange={handleChange}
-          style={{ width: "100%", marginBottom: "12px", padding: "10px" }}
+          style={{width:"100%", marginBottom:"10px", padding:"10px"}}
         />
 
         <input
@@ -77,30 +66,25 @@ const loginUser = () => {
           placeholder="Password"
           value={form.password}
           onChange={handleChange}
-          style={{ width: "100%", marginBottom: "12px", padding: "10px" }}
+          style={{width:"100%", marginBottom:"10px", padding:"10px"}}
         />
 
         <button
           onClick={loginUser}
-          disabled={loading}
           style={{
-            width: "100%",
-            padding: "10px",
-            background: "#1976d2",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer"
+            width:"100%",
+            padding:"12px",
+            background:"#1976d2",
+            color:"white",
+            border:"none",
+            borderRadius:"6px",
+            fontWeight:"bold"
           }}
         >
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        {error && (
-          <p style={{ color: "red", marginTop: "10px", textAlign: "center" }}>
-            {error}
-          </p>
-        )}
+        {error && <p style={{color:"red", marginTop:"10px"}}>{error}</p>}
       </div>
     </div>
   );
